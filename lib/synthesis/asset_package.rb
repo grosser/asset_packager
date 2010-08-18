@@ -58,13 +58,13 @@ module Synthesis
       end
 
       def build_all
-        asset_packages_yml.keys.each do |asset_type|
+        (asset_packages_yml.keys - ['options']).each do |asset_type|
           asset_packages_yml[asset_type].each { |p| self.new(asset_type, p).build }
         end
       end
 
       def delete_all
-        asset_packages_yml.keys.each do |asset_type|
+        (asset_packages_yml.keys - ['options']).each do |asset_type|
           asset_packages_yml[asset_type].each { |p| self.new(asset_type, p).delete_previous_build }
         end
       end
@@ -149,9 +149,12 @@ module Synthesis
       end
     
       def compressed_file
-        case @asset_type
+        compressed = case @asset_type
           when "javascripts" then compress_js(merged_file)
           when "stylesheets" then compress_css(merged_file)
+        end
+        if (self.class.asset_packages_yml['options']||{})['add_packaged_at']
+          compressed << "\n/* packaged at #{Time.now.utc.strftime('%Y-%m-%d %H:%M:%S')} UTC */"
         end
       end
 
