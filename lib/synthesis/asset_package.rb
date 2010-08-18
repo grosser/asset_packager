@@ -137,11 +137,14 @@ module Synthesis
 
       def merged_file
         merged_file = ""
-        @sources.each {|s| 
-          File.open("#{@asset_path}/#{s}.#{@extension}", "r") { |f| 
-            merged_file += f.read + "\n" 
-          }
-        }
+        @sources.each do |source|
+          file = if source.to_s[0..0] == '/'
+            "#{self.class.asset_base_path}#{source}.#{@extension}" # /foo/bar -> /public/foo/bar.js
+          else
+            "#{@asset_path}/#{source}.#{@extension}" # foo/bar -> /public/javascripts/foo/bar.js
+          end
+          merged_file << File.read(file) << "\n"
+        end
         merged_file
       end
     
