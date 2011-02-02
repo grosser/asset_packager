@@ -1,4 +1,5 @@
 require 'rubygems'
+require 'redgreen'
 
 `rm -rf test/fake_root`
 `mkdir -p test/fake_root/tmp`
