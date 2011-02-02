@@ -150,15 +150,15 @@ module Synthesis
     
       def compressed_file
         compressed = case @asset_type
-          when "javascripts" then compress_js(merged_file)
-          when "stylesheets" then compress_css(merged_file)
+          when "javascripts" then self.class.compress_js(merged_file)
+          when "stylesheets" then self.class.compress_css(merged_file)
         end
         if (self.class.asset_packages_yml['options']||{})['add_packaged_at']
           compressed << "\n/* packaged at #{Time.now.utc.strftime('%Y-%m-%d %H:%M:%S')} UTC */"
         end
       end
 
-      def compress_js(source)
+      def self.compress_js(source)
         jsmin_path = File.join(File.dirname(__FILE__), 'jsmin.rb')
         tmp_path = "#{Rails.root}/tmp/#{@target}_packaged"
       
@@ -179,7 +179,7 @@ module Synthesis
         result
       end
   
-      def compress_css(source)
+      def self.compress_css(source)
         source.gsub!(/\s+/, " ")           # collapse space
         source.gsub!(/\/\*(.*?)\*\//, "")  # remove comments - caution, might want to remove this if using css hacks
         source.gsub!(/\} /, "}\n")         # add line breaks
@@ -187,23 +187,27 @@ module Synthesis
         source.gsub!(/ \{ /, " {")         # trim inside brackets
         source.gsub!(/; \}/, "}")          # trim inside brackets
         
-        # add timestamps to images in css
+        add_timestamps_to_urls!(source)
+        source
+      end
+
+      def self.add_timestamps_to_urls!(source)
         source.gsub!(/url\(['"]?([^'"\)]+?(?:gif|png|jpe?g))['"]?\)/i) do |match|
-        
           file = $1
           path = File.join(Rails.root, 'public')
-          
-          if file.starts_with?('/')
-            path = File.join(path, file) 
+
+          path = if file.starts_with?('/')
+            File.join(path, file)
           else
-            path = File.join(path, 'stylesheets', file)
+            File.join(path, 'stylesheets', file)
           end
-          
-          
-          match.gsub(file, "#{file}?#{File.new(path).mtime.to_i}")
+
+          if mtime = File.mtime(path).to_i rescue nil
+            match.gsub(file, "#{file}?#{mtime}")
+          else
+            match
+          end
         end
-        
-        source
       end
 
       def get_extension

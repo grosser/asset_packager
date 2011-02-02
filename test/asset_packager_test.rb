@@ -1,6 +1,6 @@
 require 'test/test_helper'
 
-class AssetPackagerTest < Test::Unit::TestCase
+class AssetPackagerTest < ActionController::TestCase
   include Synthesis
   
   def setup
@@ -85,5 +85,4 @@ class AssetPackagerTest < Test::Unit::TestCase
   def test_should_only_return_production_merge_environment_when_not_set
     assert_equal ["production"], Synthesis::AssetPackage.merge_environments
   end
-  
 end
