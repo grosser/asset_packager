@@ -186,16 +186,25 @@ module Synthesis
         source.gsub!(/\n$/, "")            # remove last break
         source.gsub!(/ \{ /, " {")         # trim inside brackets
         source.gsub!(/; \}/, "}")          # trim inside brackets
-        
+
         add_timestamps_to_urls!(source)
+        add_asset_host_to_urls!(source, (asset_packages_yml['options']||{})['asset_host'])
         source
       end
 
-      def self.add_timestamps_to_urls!(source)
-        source.gsub!(/url\(['"]?([^'"\)]+?(?:gif|png|jpe?g))['"]?\)/i) do |match|
-          file = $1
-          path = File.join(Rails.root, 'public')
+      def self.add_asset_host_to_urls!(source, host)
+        return unless host
+        gsub_urls!(source) do |file, path|
+          if file !~ /^http/
+            file = "/stylesheets/#{file}" unless file.starts_with?('/')
+            "#{host.sub(%r{/$},'')}#{file}"
+          end
+        end
+      end
 
+      def self.add_timestamps_to_urls!(source)
+        gsub_urls!(source) do |file|
+          path = File.join(Rails.root, 'public')
           path = if file.starts_with?('/')
             File.join(path, file)
           else
@@ -203,7 +212,18 @@ module Synthesis
           end
 
           if mtime = File.mtime(path).to_i rescue nil
-            match.gsub(file, "#{file}?#{mtime}")
+            "#{file}?#{mtime}"
+          else
+            nil
+          end
+        end
+      end
+
+      def self.gsub_urls!(source)
+        source.gsub!(/url\(['"]?([^'"\)]+?(?:gif|png|jpe?g))['"]?\)/i) do |match|
+          file = $1
+          if result = yield(file)
+            match.gsub(file, result)
           else
             match
           end
