@@ -69,6 +69,12 @@ class CssCompressionTest < ActionController::TestCase
     assert_equal %{url(http://bar/stylesheets/foo.jpg)}, compress_css(%{url(foo.jpg)})
   end
 
+  test "adds timestamp and host" do
+    options 'asset_host' => 'http://bar'
+    write('public/foo.jpg','x')
+    assert_equal %{url(http://bar/foo.jpg?#{Time.now.to_i})}, compress_css(%{url(/foo.jpg)})
+  end
+
   test "does not add asset host to remote urls" do
     options 'asset_host' => 'http://bar'
     assert_equal %{url(http://a.b/foo.jpg)}, compress_css(%{url(http://a.b/foo.jpg)})

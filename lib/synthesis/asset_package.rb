@@ -189,6 +189,7 @@ module Synthesis
 
         add_timestamps_to_urls!(source)
         add_asset_host_to_urls!(source, (asset_packages_yml['options']||{})['asset_host'])
+
         source
       end
 
@@ -220,7 +221,7 @@ module Synthesis
       end
 
       def self.gsub_urls!(source)
-        source.gsub!(/url\(['"]?([^'"\)]+?(?:gif|png|jpe?g))['"]?\)/i) do |match|
+        source.gsub!(/url\(['"]?([^'"\)]+?(gif|png|jpe?g)(\?\d+)?)['"]?\)/i) do |match|
           file = $1
           if result = yield(file)
             match.gsub(file, result)
