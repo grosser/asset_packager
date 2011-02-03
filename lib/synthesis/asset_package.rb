@@ -192,7 +192,7 @@ module Synthesis
         source.gsub!(/ \{ /, " {")         # trim inside brackets
         source.gsub!(/; \}/, "}")          # trim inside brackets
 
-        add_timestamps_to_urls!(source)
+        add_timestamps_to_urls!(source) if asset_packages_options['add_timestamps_to_css_urls']
         add_asset_host_to_urls!(source, asset_packages_options['asset_host'])
 
         source
