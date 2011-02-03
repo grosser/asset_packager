@@ -6,6 +6,7 @@ class CssCompressionTest < ActionController::TestCase
   end
 
   def setup
+    Rails.env = 'development'
     Synthesis::AssetPackage.asset_packages_yml = {}
   end
 
@@ -25,6 +26,23 @@ class CssCompressionTest < ActionController::TestCase
 
   def fake_path(path=nil)
     "test/fake_root/#{path}"
+  end
+
+  # ENVIRONMENTS
+  test "reads from default environment" do
+    options('default' => {'bla' => 1})
+    assert_equal({'bla' => 1}, Synthesis::AssetPackage.asset_packages_options)
+  end
+
+  test "reads from empty environment" do
+    options('bla' => 1)
+    assert_equal({'bla' => 1}, Synthesis::AssetPackage.asset_packages_options)
+  end
+
+  test "reads from current environment" do
+    Rails.env = 'test'
+    options('test' => {'bla' => 1})
+    assert_equal({'bla' => 1}, Synthesis::AssetPackage.asset_packages_options)
   end
 
   # TIMESTAMP

@@ -10,7 +10,12 @@ module Synthesis
                     :asset_packages_yml
 
       attr_writer   :merge_environments
-      
+
+      def asset_packages_options
+        options = asset_packages_yml['options']||{}
+        options[Rails.env] || options['default'] || options
+      end
+
       def merge_environments
         @merge_environments ||= ["production"]
       end
@@ -153,7 +158,7 @@ module Synthesis
           when "javascripts" then self.class.compress_js(merged_file)
           when "stylesheets" then self.class.compress_css(merged_file)
         end
-        if (self.class.asset_packages_yml['options']||{})['add_packaged_at']
+        if self.class.asset_packages_options['add_packaged_at']
           compressed << "\n/* packaged at #{Time.now.utc.strftime('%Y-%m-%d %H:%M:%S')} UTC */"
         end
       end
@@ -188,7 +193,7 @@ module Synthesis
         source.gsub!(/; \}/, "}")          # trim inside brackets
 
         add_timestamps_to_urls!(source)
-        add_asset_host_to_urls!(source, (asset_packages_yml['options']||{})['asset_host'])
+        add_asset_host_to_urls!(source, asset_packages_options['asset_host'])
 
         source
       end
