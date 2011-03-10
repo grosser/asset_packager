@@ -1,8 +1,8 @@
 require 'test/test_helper'
 
 class CssCompressionTest < ActionController::TestCase
-  def compress_css(css)
-    Synthesis::AssetPackage.send(:compress_css, css)
+  def compress_css(css, options={})
+    Synthesis::AssetPackage.send(:compress_css, css, options)
   end
 
   def setup
@@ -43,6 +43,13 @@ class CssCompressionTest < ActionController::TestCase
     Rails.env = 'test'
     options('test' => {'bla' => 1})
     assert_equal({'bla' => 1}, Synthesis::AssetPackage.asset_packages_options)
+  end
+
+  test "uses file specific option given to compress" do
+    Rails.env = 'test'
+    options 'add_timestamps_to_css_urls' => false
+    write('public/foo.jpg','x')
+    assert_equal compress_css("url(/foo.jpg)", 'add_timestamps_to_css_urls' => true), "url(/foo.jpg?#{Time.now.to_i})"
   end
 
   # TIMESTAMP

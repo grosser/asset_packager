@@ -154,18 +154,21 @@ module Synthesis
       end
     
       def compressed_file
+        file_specific_options = self.class.asset_packages_options[@asset_type] || {}
+        file_specific_options = file_specific_options[@target] || {}
+
         compressed = case @asset_type
-          when "javascripts" then self.class.compress_js(merged_file)
-          when "stylesheets" then self.class.compress_css(merged_file)
+          when "javascripts" then self.class.compress_js(merged_file, file_specific_options)
+          when "stylesheets" then self.class.compress_css(merged_file, file_specific_options)
         end
         if self.class.asset_packages_options['add_packaged_at']
           compressed << "\n/* packaged at #{Time.now.utc.strftime('%Y-%m-%d %H:%M:%S')} UTC */"
         end
       end
 
-      def self.compress_js(source)
+      def self.compress_js(source, options={})
         jsmin_path = File.join(File.dirname(__FILE__), 'jsmin.rb')
-        tmp_path = "#{Rails.root}/tmp/#{@target}_packaged"
+        tmp_path = "#{Rails.root}/tmp/js_packaged"
       
         # write out to a temp file
         File.open("#{tmp_path}_uncompressed.js", "w") {|f| f.write(source) }
@@ -184,7 +187,7 @@ module Synthesis
         result
       end
   
-      def self.compress_css(source)
+      def self.compress_css(source, options={})
         source.gsub!(/\s+/, " ")           # collapse space
         source.gsub!(/\/\*(.*?)\*\//, "")  # remove comments - caution, might want to remove this if using css hacks
         source.gsub!(/\} /, "}\n")         # add line breaks
@@ -192,14 +195,14 @@ module Synthesis
         source.gsub!(/ \{ /, " {")         # trim inside brackets
         source.gsub!(/; \}/, "}")          # trim inside brackets
 
-        add_timestamps_to_urls!(source) if asset_packages_options['add_timestamps_to_css_urls']
-        add_asset_host_to_urls!(source, asset_packages_options['asset_host'])
+        options = asset_packages_options.merge(options)
+        add_timestamps_to_urls!(source) if options['add_timestamps_to_css_urls']
+        add_asset_host_to_urls!(source, options['asset_host']) if options['asset_host']
 
         source
       end
 
       def self.add_asset_host_to_urls!(source, host)
-        return unless host
         gsub_urls!(source) do |file, path|
           if file !~ /^http/
             file = "/stylesheets/#{file}" unless file.starts_with?('/')
