@@ -94,6 +94,12 @@ class CssCompressionTest < ActionController::TestCase
     assert_equal compress_css(%{url(http://foo.com/foo.jpg)}), %{url(http://foo.com/foo.jpg)}
   end
 
+  test "adds md5 to urls" do
+    options 'modify_local_asset_url' => '%{path}?%{MD5}'
+    write('public/foo.jpg','x')
+    assert_equal compress_css("url(/foo.jpg)"), "url(/foo.jpg?9dd4e46)"
+  end
+
   # ASSET HOST
   test "adds asset_host to local urls" do
     options 'asset_host' => 'http://bar'

@@ -196,13 +196,14 @@ module Synthesis
         source.gsub!(/; \}/, "}")          # trim inside brackets
 
         options = asset_packages_options.merge(options)
-        add_timestamps_to_urls!(source) if options['add_timestamps_to_css_urls']
-        add_asset_host_to_urls!(source, options['asset_host']) if options['asset_host']
+        options['modify_local_asset_url'] = '%{path}?%{timestamp}' if options['add_timestamps_to_css_urls']
+        modify_local_urls!(source, options['modify_local_asset_url']) if options['modify_local_asset_url']
+        add_asset_host_to_local_urls!(source, options['asset_host']) if options['asset_host']
 
         source
       end
 
-      def self.add_asset_host_to_urls!(source, host)
+      def self.add_asset_host_to_local_urls!(source, host)
         gsub_urls!(source) do |file, path|
           if file !~ /^http/
             file = "/stylesheets/#{file}" unless file.starts_with?('/')
@@ -211,7 +212,7 @@ module Synthesis
         end
       end
 
-      def self.add_timestamps_to_urls!(source)
+      def self.modify_local_urls!(source, rule)
         gsub_urls!(source) do |file|
           path = File.join(Rails.root, 'public')
           path = if file.starts_with?('/')
@@ -220,11 +221,19 @@ module Synthesis
             File.join(path, 'stylesheets', file)
           end
 
-          if mtime = File.mtime(path).to_i rescue nil
-            "#{file}?#{mtime}"
-          else
-            nil
-          end
+          return unless File.file?(path)
+
+          result = rule.dup
+
+          replace = {
+            :timestamp => (File.mtime(path).to_i if rule.include?('%{timestamp}')),
+            :MD5 => (Digest::MD5.file(path).hexdigest[0..6] if rule.include?('%{MD5}')),
+            :path => file
+          }
+
+          replace.each{|k,v| result.gsub!("%{#{k}}",v.to_s) }
+
+          result
         end
       end
 
