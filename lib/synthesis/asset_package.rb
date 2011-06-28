@@ -221,7 +221,7 @@ module Synthesis
             File.join(path, 'stylesheets', file)
           end
 
-          return unless File.file?(path)
+          next unless File.file?(path)
 
           result = rule.dup
 
