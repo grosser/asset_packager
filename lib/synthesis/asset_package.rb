@@ -196,8 +196,8 @@ module Synthesis
         source.gsub!(/; \}/, "}")          # trim inside brackets
 
         options = asset_packages_options.merge(options)
-        options['modify_local_asset_url'] = '%{path}?%{timestamp}' if options['add_timestamps_to_css_urls']
-        modify_local_urls!(source, options['modify_local_asset_url']) if options['modify_local_asset_url']
+        options['rewrite_local_asset_paths'] = '%{path}?%{timestamp}' if options['add_timestamps_to_css_urls']
+        rewrite_local_paths!(source, options['rewrite_local_asset_paths']) if options['rewrite_local_asset_paths']
         add_asset_host_to_local_urls!(source, options['asset_host']) if options['asset_host']
 
         source
@@ -212,7 +212,7 @@ module Synthesis
         end
       end
 
-      def self.modify_local_urls!(source, rule)
+      def self.rewrite_local_paths!(source, rule)
         gsub_urls!(source) do |file|
           path = File.join(Rails.root, 'public')
           path = if file.starts_with?('/')

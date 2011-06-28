@@ -95,7 +95,7 @@ class CssCompressionTest < ActionController::TestCase
   end
 
   test "adds md5 to urls" do
-    options 'modify_local_asset_url' => '%{path}?%{MD5}'
+    options 'rewrite_local_asset_paths' => '%{path}?%{MD5}'
     write('public/foo.jpg','x')
     assert_equal compress_css("url(/foo.jpg)"), "url(/foo.jpg?9dd4e46)"
   end

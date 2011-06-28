@@ -1,6 +1,7 @@
 = AssetPackager fork to add
 * support for options: in yml (also environment specific e.g. test/production/default and file specific test: stylesheets: base_ssl: asset_host: 'https://bla.host')
 * add timestamps to css urls (options: add_timestamps_to_css_urls: true)
+* rewrite local paths (options: rewrite_local_asset_paths: '%{path}?%{MD5}--%{timestamp}')
 * add asset_host to css urls (options: asset_host: http://my_host)
 * add 'packadged at' to all packages <-> see when it was generated (options: add_packaged_at: true)
 * support absolute assets (javascripts: -base: /foo/xxx.js)
